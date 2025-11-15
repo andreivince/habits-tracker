@@ -5,8 +5,7 @@ struct TodayTasksView: View {
     @EnvironmentObject private var habitStore: HabitStore
 
     private var todayHabits: [Habit] {
-        let today = Date().startOfDay
-        return habitStore.habits.filter { $0.isActiveDay(today) }
+        habitStore.habits.filter { $0.isActiveDay(habitStore.currentDay) }
     }
 
     var body: some View {
@@ -53,7 +52,7 @@ struct TodayTasksView: View {
     private var todayDate: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "EEEE, MMMM d"
-        return formatter.string(from: Date())
+        return formatter.string(from: habitStore.currentDay)
     }
 }
 
@@ -63,19 +62,19 @@ private struct TodayHabitRow: View {
     let habit: Habit
 
     private var isCheckedIn: Bool {
-        habit.isCheckedIn(on: Date().startOfDay)
+        habit.isCheckedIn(on: habitStore.currentDay)
     }
 
     private var currentMinutes: Int {
-        habit.minutes(on: Date().startOfDay)
+        habit.minutes(on: habitStore.currentDay)
     }
 
     var body: some View {
         Button {
             if habit.trackingType == .minutes {
-                habitStore.incrementOrResetMinutes(for: habit, on: Date().startOfDay)
+                habitStore.incrementOrResetMinutes(for: habit, on: habitStore.currentDay)
             } else {
-                habitStore.toggleCheckIn(for: habit, on: Date().startOfDay)
+                habitStore.toggleCheckIn(for: habit, on: habitStore.currentDay)
             }
         } label: {
             HStack(spacing: 16) {

@@ -14,7 +14,7 @@ struct ContentView: View {
     }
 
     private var greetingTitle: String {
-        HomeTab.greeting(for: Date())
+        HomeTab.greeting(for: habitStore.currentDay)
     }
 
     var body: some View {
@@ -54,6 +54,9 @@ struct ContentView: View {
         .sheet(isPresented: $showingSettings) {
             SettingsSheet(userName: $userName, useSerifFont: $useSerifFont)
                 .environment(\.useSerifFont, useSerifFont)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            habitStore.refreshIfNeeded()
         }
     }
 }

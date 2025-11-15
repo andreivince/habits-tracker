@@ -7,25 +7,22 @@ struct StreakMatrixView: View {
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 7)
 
     private var todayHabits: [Habit] {
-        let today = Date().startOfDay
-        return habitStore.habits.filter { $0.isActiveDay(today) }
+        habitStore.habits.filter { $0.isActiveDay(habitStore.currentDay) }
     }
 
     private var allCheckedIn: Bool {
-        let today = Date().startOfDay
-        return todayHabits.allSatisfy { $0.isCheckedIn(on: today) }
+        todayHabits.allSatisfy { $0.isCheckedIn(on: habitStore.currentDay) }
     }
 
     private func toggleTodayCheckIns() {
-        let today = Date().startOfDay
         for habit in todayHabits {
             if allCheckedIn {
-                if habit.isCheckedIn(on: today) {
-                    habitStore.toggleCheckIn(for: habit, on: today)
+                if habit.isCheckedIn(on: habitStore.currentDay) {
+                    habitStore.toggleCheckIn(for: habit, on: habitStore.currentDay)
                 }
             } else {
-                if !habit.isCheckedIn(on: today) {
-                    habitStore.toggleCheckIn(for: habit, on: today)
+                if !habit.isCheckedIn(on: habitStore.currentDay) {
+                    habitStore.toggleCheckIn(for: habit, on: habitStore.currentDay)
                 }
             }
         }
