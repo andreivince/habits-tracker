@@ -1,12 +1,15 @@
 import SwiftUI
+import AppKit
 
 struct SettingsSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
+    @EnvironmentObject private var habitStore: HabitStore
     @Binding var userName: String
     @Binding var useSerifFont: Bool
 
     @State private var editedName: String
+    @State private var showExportSuccess = false
     @FocusState private var isNameFocused: Bool
 
     init(userName: Binding<String>, useSerifFont: Binding<Bool>) {
@@ -23,6 +26,7 @@ struct SettingsSheet: View {
                 VStack(alignment: .leading, spacing: 32) {
                     nameSection
                     fontSection
+                    exportSection
                 }
                 .padding(28)
             }
@@ -30,7 +34,7 @@ struct SettingsSheet: View {
             footer
         }
         .background(AdaptiveColor.cardBackground(colorScheme))
-        .frame(width: 480, height: 420)
+        .frame(width: 480, height: 540)
         .onAppear {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 isNameFocused = true
@@ -115,6 +119,88 @@ struct SettingsSheet: View {
                         useSerifFont = true
                     }
                 }
+            }
+        }
+    }
+
+    private var exportSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(spacing: 8) {
+                Image(systemName: "square.and.arrow.up")
+                    .font(.subheadline)
+                    .foregroundStyle(AdaptiveColor.tabBarSelected(colorScheme))
+                Text("Data Export")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(AdaptiveColor.graphite(colorScheme))
+            }
+
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Export your habit history as a CSV file with completion percentages and rest days.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Button {
+                    exportHabits()
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "doc.text")
+                            .font(.subheadline)
+                        Text("Export to CSV")
+                            .font(.body.weight(.medium))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(AdaptiveColor.textFieldBackground(colorScheme))
+                    )
+                    .foregroundStyle(AdaptiveColor.graphite(colorScheme))
+                }
+                .buttonStyle(.plain)
+                .disabled(habitStore.habits.isEmpty)
+                .opacity(habitStore.habits.isEmpty ? 0.4 : 1.0)
+
+                if showExportSuccess {
+                    HStack(spacing: 6) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                        Text("Export successful!")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .transition(.opacity.combined(with: .scale(scale: 0.9)))
+                }
+            }
+        }
+    }
+
+    private func exportHabits() {
+        let savePanel = NSSavePanel()
+        savePanel.canCreateDirectories = true
+        savePanel.showsTagField = false
+        savePanel.nameFieldStringValue = "habits_export_\(Date().dateString).csv"
+        savePanel.level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.modalPanelWindow)))
+
+        savePanel.begin { response in
+            guard response == .OK, let url = savePanel.url else { return }
+
+            let csv = HabitExportService.generateCSV(habits: habitStore.habits)
+
+            do {
+                try csv.write(to: url, atomically: true, encoding: .utf8)
+
+                withAnimation {
+                    showExportSuccess = true
+                }
+
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                    withAnimation {
+                        showExportSuccess = false
+                    }
+                }
+            } catch {
+                print("Error writing CSV file: \(error)")
             }
         }
     }
