@@ -51,19 +51,19 @@ struct AdaptiveColor {
     }
 
     static func progressPanelBackground(_ colorScheme: ColorScheme) -> Color {
-        colorScheme == .dark ? Color(red: 32 / 255, green: 35 / 255, blue: 42 / 255) : .graphiteDark
+        colorScheme == .dark ? Color(red: 32 / 255, green: 35 / 255, blue: 42 / 255) : .white
     }
 
     static func metricCardBackground(_ colorScheme: ColorScheme) -> Color {
-        colorScheme == .dark ? Color(red: 42 / 255, green: 45 / 255, blue: 52 / 255) : Color.graphiteDark.opacity(0.55)
+        colorScheme == .dark ? Color(red: 42 / 255, green: 45 / 255, blue: 52 / 255) : Color.graphiteDark.opacity(0.06)
     }
 
     static func metricCardText(_ colorScheme: ColorScheme) -> Color {
-        colorScheme == .dark ? .graphiteLight : .white
+        colorScheme == .dark ? .graphiteLight : .graphiteDark
     }
 
     static func scopePickerSelected(_ colorScheme: ColorScheme) -> Color {
-        colorScheme == .dark ? Color(red: 50 / 255, green: 53 / 255, blue: 60 / 255) : .white
+        colorScheme == .dark ? Color(red: 50 / 255, green: 53 / 255, blue: 60 / 255) : Color.graphiteDark.opacity(0.12)
     }
 
     static func scopePickerSelectedText(_ colorScheme: ColorScheme) -> Color {
@@ -71,11 +71,11 @@ struct AdaptiveColor {
     }
 
     static func scopePickerBackground(_ colorScheme: ColorScheme) -> Color {
-        colorScheme == .dark ? Color.black.opacity(0.2) : Color.white.opacity(0.1)
+        colorScheme == .dark ? Color.black.opacity(0.2) : Color.graphiteDark.opacity(0.06)
     }
 
     static func scopePickerBorder(_ colorScheme: ColorScheme) -> Color {
-        colorScheme == .dark ? Color.white.opacity(0.1) : Color.white.opacity(0.2)
+        colorScheme == .dark ? Color.white.opacity(0.1) : Color.graphiteDark.opacity(0.1)
     }
 
     static func tabBarSelected(_ colorScheme: ColorScheme) -> Color {

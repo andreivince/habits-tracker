@@ -10,9 +10,15 @@ final class HabitStore: ObservableObject {
         load()
     }
 
-    func create(title: String, cadence: Set<Weekday>) {
-        let habit = Habit(title: title, cadence: cadence)
+    func create(title: String, cadence: Set<Weekday>, trackingType: HabitTrackingType = .boolean, goalMinutes: Int? = nil) {
+        let habit = Habit(title: title, cadence: cadence, trackingType: trackingType, goalMinutes: goalMinutes)
         habits.append(habit)
+        save()
+    }
+
+    func update(_ habit: Habit) {
+        guard let index = habits.firstIndex(where: { $0.id == habit.id }) else { return }
+        habits[index] = habit
         save()
     }
 
@@ -24,6 +30,18 @@ final class HabitStore: ObservableObject {
     func toggleCheckIn(for habit: Habit, on date: Date) {
         guard let index = habits.firstIndex(where: { $0.id == habit.id }) else { return }
         habits[index].toggleCheckIn(on: date)
+        save()
+    }
+
+    func addMinutes(_ minutes: Int, for habit: Habit, on date: Date) {
+        guard let index = habits.firstIndex(where: { $0.id == habit.id }) else { return }
+        habits[index].addMinutes(minutes, on: date)
+        save()
+    }
+
+    func incrementOrResetMinutes(for habit: Habit, on date: Date) {
+        guard let index = habits.firstIndex(where: { $0.id == habit.id }) else { return }
+        habits[index].incrementOrResetMinutes(on: date)
         save()
     }
 

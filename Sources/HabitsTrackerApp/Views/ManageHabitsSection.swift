@@ -5,16 +5,17 @@ struct ManageHabitsSection: View {
     @EnvironmentObject private var habitStore: HabitStore
 
     @State private var showingForm = false
+    @State private var habitToEdit: Habit?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
             HStack {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Manage habits")
-                        .font(.title3.weight(.semibold))
+                        .adaptiveFont(.title3)
                         .foregroundStyle(AdaptiveColor.graphite(colorScheme))
                     Text("Tune cadence, pause rituals, and archive what no longer serves.")
-                        .font(.subheadline)
+                        .adaptiveFont(.subheadline)
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
@@ -33,9 +34,16 @@ struct ManageHabitsSection: View {
 
             VStack(spacing: 16) {
                 ForEach(habitStore.habits) { habit in
-                    HabitRow(habit: habit, onDelete: {
-                        habitStore.delete(habit)
-                    })
+                    HabitRow(
+                        habit: habit,
+                        onEdit: {
+                            habitToEdit = habit
+                            showingForm = true
+                        },
+                        onDelete: {
+                            habitStore.delete(habit)
+                        }
+                    )
                 }
             }
         }
@@ -45,9 +53,21 @@ struct ManageHabitsSection: View {
                 .fill(AdaptiveColor.cardBackground(colorScheme))
                 .shadow(color: AdaptiveColor.cardShadow(colorScheme).opacity(0.08), radius: 28, x: 0, y: 18)
         )
-        .sheet(isPresented: $showingForm) {
-            HabitFormSheet(onSave: { title, selectedDays in
-                habitStore.create(title: title, cadence: selectedDays)
+        .sheet(isPresented: $showingForm, onDismiss: {
+            habitToEdit = nil
+        }) {
+            HabitFormSheet(habitToEdit: habitToEdit, onSave: { habit in
+                if habitToEdit != nil {
+                    habitStore.update(habit)
+                } else {
+                    habitStore.create(
+                        title: habit.title,
+                        cadence: habit.cadence,
+                        trackingType: habit.trackingType,
+                        goalMinutes: habit.goalMinutes
+                    )
+                }
+                habitToEdit = nil
             })
         }
     }
@@ -56,6 +76,7 @@ struct ManageHabitsSection: View {
 private struct HabitRow: View {
     @Environment(\.colorScheme) private var colorScheme
     let habit: Habit
+    let onEdit: () -> Void
     let onDelete: () -> Void
 
     private var cadenceText: String {
@@ -63,27 +84,62 @@ private struct HabitRow: View {
         return days.map { $0.short }.joined(separator: ", ")
     }
 
+    private var trackingTypeText: String {
+        if habit.trackingType == .minutes {
+            if let goal = habit.goalMinutes {
+                return "\(goal) min"
+            }
+            return "Minutes"
+        }
+        return "Check-in"
+    }
+
     var body: some View {
         HStack(alignment: .center, spacing: 16) {
             VStack(alignment: .leading, spacing: 6) {
                 Text(habit.title)
-                    .font(.headline)
+                    .adaptiveFont(.headline)
                     .foregroundStyle(AdaptiveColor.graphite(colorScheme))
-                Text(cadenceText)
-                    .font(.caption)
+                HStack(spacing: 8) {
+                    Text(cadenceText)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text("•")
+                        .font(.caption)
+                        .foregroundStyle(.secondary.opacity(0.5))
+                    HStack(spacing: 4) {
+                        Image(systemName: habit.trackingType == .minutes ? "clock" : "checkmark.circle")
+                            .font(.caption2)
+                        Text(trackingTypeText)
+                            .font(.caption)
+                    }
                     .foregroundStyle(.secondary)
+                }
             }
             Spacer()
-            Button {
-                onDelete()
-            } label: {
-                Image(systemName: "trash")
-                    .font(.title3)
-                    .foregroundStyle(AdaptiveColor.graphite(colorScheme).opacity(0.6))
-                    .padding(10)
-                    .background(AdaptiveColor.habitRowButton(colorScheme), in: Circle())
+            HStack(spacing: 8) {
+                Button {
+                    onEdit()
+                } label: {
+                    Image(systemName: "pencil")
+                        .font(.title3)
+                        .foregroundStyle(AdaptiveColor.graphite(colorScheme).opacity(0.6))
+                        .padding(10)
+                        .background(AdaptiveColor.habitRowButton(colorScheme), in: Circle())
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    onDelete()
+                } label: {
+                    Image(systemName: "trash")
+                        .font(.title3)
+                        .foregroundStyle(AdaptiveColor.graphite(colorScheme).opacity(0.6))
+                        .padding(10)
+                        .background(AdaptiveColor.habitRowButton(colorScheme), in: Circle())
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
         }
         .padding(20)
         .background(

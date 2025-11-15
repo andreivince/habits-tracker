@@ -56,19 +56,17 @@ struct HabitSnapshotBuilder {
     }
 
     private static func calculateDayValue(for date: Date, habits: [Habit]) -> Double {
-        var totalChecked = 0
+        var totalCompletion = 0.0
         var totalActive = 0
 
         for habit in habits where date >= habit.startDate.startOfDay {
             guard habit.isActiveDay(date) else { continue }
             totalActive += 1
-            if habit.isCheckedIn(on: date) {
-                totalChecked += 1
-            }
+            totalCompletion += habit.completionValue(on: date)
         }
 
         guard totalActive > 0 else { return 0 }
-        return Double(totalChecked) / Double(totalActive)
+        return totalCompletion / Double(totalActive)
     }
 
     private static func calculateMonthValue(start: Date, end: Date, habits: [Habit]) -> Double {
@@ -96,7 +94,7 @@ struct HabitSnapshotBuilder {
 
             for habit in habits where date >= habit.startDate.startOfDay {
                 guard habit.isActiveDay(date) else { continue }
-                if habit.isCheckedIn(on: date) {
+                if habit.completionValue(on: date) >= 1.0 {
                     dayComplete = true
                     break
                 }
@@ -119,7 +117,7 @@ struct HabitSnapshotBuilder {
         let today = Date().startOfDay
         let daysCount = scope == .weekly ? 7 : (scope == .monthly ? 30 : 365)
 
-        var totalChecked = 0
+        var totalCompletion = 0.0
         var totalActive = 0
 
         for dayOffset in 0..<daysCount {
@@ -127,14 +125,12 @@ struct HabitSnapshotBuilder {
             for habit in habits where date >= habit.startDate.startOfDay {
                 guard habit.isActiveDay(date) else { continue }
                 totalActive += 1
-                if habit.isCheckedIn(on: date) {
-                    totalChecked += 1
-                }
+                totalCompletion += habit.completionValue(on: date)
             }
         }
 
         guard totalActive > 0 else { return 0 }
-        return Double(totalChecked) / Double(totalActive)
+        return totalCompletion / Double(totalActive)
     }
 
     private static func buildCaption(habits: [Habit], scope: TimeScope) -> String {

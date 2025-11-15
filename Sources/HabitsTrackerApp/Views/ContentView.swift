@@ -5,8 +5,9 @@ struct ContentView: View {
     @State private var selectedScope: TimeScope = .weekly
     @State private var selectedTab: HomeTab = .dashboard
     @AppStorage("isDarkMode") private var isDarkMode = false
-
-    private let userName = "Andrei Vince"
+    @AppStorage("userName") private var userName = "Andrei Vince"
+    @AppStorage("useSerifFont") private var useSerifFont = false
+    @State private var showingSettings = false
 
     private var snapshot: HabitSnapshot {
         HabitSnapshotBuilder.build(from: habitStore.habits, scope: selectedScope)
@@ -41,7 +42,7 @@ struct ContentView: View {
             VStack {
                 HStack {
                     Spacer()
-                    ThemeToggleButton(isDarkMode: $isDarkMode)
+                    ThemeToggleButton(isDarkMode: $isDarkMode, showingSettings: $showingSettings)
                         .padding(.top, 48)
                         .padding(.trailing, 48)
                 }
@@ -49,5 +50,10 @@ struct ContentView: View {
             }
         }
         .preferredColorScheme(isDarkMode ? .dark : .light)
+        .environment(\.useSerifFont, useSerifFont)
+        .sheet(isPresented: $showingSettings) {
+            SettingsSheet(userName: $userName, useSerifFont: $useSerifFont)
+                .environment(\.useSerifFont, useSerifFont)
+        }
     }
 }
