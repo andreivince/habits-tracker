@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ProgressPanel: View {
+    @Environment(\.colorScheme) private var colorScheme
     let snapshot: HabitSnapshot
     @Binding var selectedScope: TimeScope
 
@@ -19,10 +20,10 @@ struct ProgressPanel: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("This \(selectedScope.title.lowercased())")
                         .font(.headline)
-                        .foregroundStyle(.white.opacity(0.9))
+                        .foregroundStyle(AdaptiveColor.metricCardText(colorScheme).opacity(0.9))
                     Text(snapshot.caption)
                         .font(.subheadline)
-                        .foregroundStyle(.white.opacity(0.65))
+                        .foregroundStyle(AdaptiveColor.metricCardText(colorScheme).opacity(0.65))
                 }
                 Spacer()
                 ScopePicker(selection: $selectedScope)
@@ -33,9 +34,6 @@ struct ProgressPanel: View {
                 .frame(height: 220)
                 .padding(.top, 4)
 
-            GraphFooter(entries: snapshot.entries, completion: snapshot.completionRate)
-                .foregroundStyle(.white)
-
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
                 ForEach(metrics) { metric in
                     ProgressMetricCard(metric: metric)
@@ -45,12 +43,12 @@ struct ProgressPanel: View {
         .padding(32)
         .background(
             RoundedRectangle(cornerRadius: 44, style: .continuous)
-                .fill(Color.graphite)
-                .shadow(color: .black.opacity(0.4), radius: 30, x: 0, y: 30)
+                .fill(AdaptiveColor.progressPanelBackground(colorScheme))
+                .shadow(color: AdaptiveColor.cardShadow(colorScheme).opacity(0.4), radius: 30, x: 0, y: 30)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 44, style: .continuous)
-                .stroke(Color.white.opacity(0.05), lineWidth: 1)
+                .stroke(AdaptiveColor.scopePickerBorder(colorScheme), lineWidth: 1)
         )
     }
 }

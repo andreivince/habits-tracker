@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct HomeTabBar: View {
+    @Environment(\.colorScheme) private var colorScheme
     @Binding var selection: HomeTab
 
     var body: some View {
@@ -11,13 +12,13 @@ struct HomeTabBar: View {
                 } label: {
                     Text(tab.title)
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(selection == tab ? Color.canvas : Color.graphite.opacity(0.7))
+                        .foregroundStyle(selection == tab ? AdaptiveColor.tabBarSelectedText(colorScheme) : AdaptiveColor.graphite(colorScheme).opacity(0.7))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
                         .background(
                             RoundedRectangle(cornerRadius: 22, style: .continuous)
-                                .fill(selection == tab ? Color.graphite : Color.white)
-                                .shadow(color: selection == tab ? .black.opacity(0.15) : .clear, radius: 18, x: 0, y: 10)
+                                .fill(selection == tab ? AdaptiveColor.tabBarSelected(colorScheme) : AdaptiveColor.cardBackground(colorScheme))
+                                .shadow(color: selection == tab ? AdaptiveColor.cardShadow(colorScheme).opacity(0.15) : .clear, radius: 18, x: 0, y: 10)
                         )
                 }
                 .buttonStyle(.plain)

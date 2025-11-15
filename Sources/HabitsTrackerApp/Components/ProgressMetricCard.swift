@@ -1,29 +1,30 @@
 import SwiftUI
 
 struct ProgressMetricCard: View {
+    @Environment(\.colorScheme) private var colorScheme
     let metric: ProgressMetric
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(metric.title.uppercased())
                 .font(.caption2.weight(.medium))
-                .foregroundStyle(Color.white.opacity(0.7))
+                .foregroundStyle(AdaptiveColor.metricCardText(colorScheme).opacity(0.7))
             Text(metric.value)
                 .font(.title3.weight(.semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(AdaptiveColor.metricCardText(colorScheme))
             Text(metric.caption)
                 .font(.caption)
-                .foregroundStyle(Color.white.opacity(0.65))
+                .foregroundStyle(AdaptiveColor.metricCardText(colorScheme).opacity(0.65))
         }
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(Color.graphite.opacity(0.55))
+                .fill(AdaptiveColor.metricCardBackground(colorScheme))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .stroke(Color.white.opacity(0.05), lineWidth: 1)
+                .stroke(AdaptiveColor.scopePickerBorder(colorScheme), lineWidth: 1)
         )
     }
 }

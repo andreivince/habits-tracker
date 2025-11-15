@@ -1,13 +1,15 @@
 import SwiftUI
 
 struct ContentView: View {
+    @EnvironmentObject private var habitStore: HabitStore
     @State private var selectedScope: TimeScope = .weekly
     @State private var selectedTab: HomeTab = .dashboard
+    @AppStorage("isDarkMode") private var isDarkMode = false
 
     private let userName = "Andrei Vince"
 
     private var snapshot: HabitSnapshot {
-        HabitSnapshot.snapshot(for: selectedScope)
+        HabitSnapshotBuilder.build(from: habitStore.habits, scope: selectedScope)
     }
 
     private var greetingTitle: String {
@@ -26,7 +28,7 @@ struct ContentView: View {
                         case .dashboard:
                             DashboardStack(snapshot: snapshot, selectedScope: $selectedScope)
                         case .manage:
-                            ManageHabitsSection(habits: HabitPlan.samples)
+                            ManageHabitsSection()
                         }
                     }
                 }
@@ -35,6 +37,17 @@ struct ContentView: View {
                 .frame(maxWidth: 940)
                 .frame(maxWidth: .infinity)
             }
+
+            VStack {
+                HStack {
+                    Spacer()
+                    ThemeToggleButton(isDarkMode: $isDarkMode)
+                        .padding(.top, 48)
+                        .padding(.trailing, 48)
+                }
+                Spacer()
+            }
         }
+        .preferredColorScheme(isDarkMode ? .dark : .light)
     }
 }

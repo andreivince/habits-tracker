@@ -1,27 +1,60 @@
 import SwiftUI
 
 struct StreakMatrixView: View {
+    @Environment(\.colorScheme) private var colorScheme
+    @EnvironmentObject private var habitStore: HabitStore
     let days: [HabitDay]
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 7)
+
+    private var todayHabits: [Habit] {
+        let today = Date().startOfDay
+        return habitStore.habits.filter { $0.isActiveDay(today) }
+    }
+
+    private var allCheckedIn: Bool {
+        let today = Date().startOfDay
+        return todayHabits.allSatisfy { $0.isCheckedIn(on: today) }
+    }
+
+    private func toggleTodayCheckIns() {
+        let today = Date().startOfDay
+        for habit in todayHabits {
+            if allCheckedIn {
+                if habit.isCheckedIn(on: today) {
+                    habitStore.toggleCheckIn(for: habit, on: today)
+                }
+            } else {
+                if !habit.isCheckedIn(on: today) {
+                    habitStore.toggleCheckIn(for: habit, on: today)
+                }
+            }
+        }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Dashboard")
+                    Text("TODAY's Tasks")
                         .font(.title3.weight(.semibold))
-                        .foregroundStyle(Color.graphite)
+                        .foregroundStyle(AdaptiveColor.graphite(colorScheme))
                     Text("Last 4 weeks of check-ins")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
-                Image(systemName: "plus")
-                    .font(.title3.weight(.semibold))
-                    .foregroundStyle(Color.graphite)
-                    .padding(10)
-                    .background(Color.white, in: Circle())
-                    .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 4)
+                Button {
+                    toggleTodayCheckIns()
+                } label: {
+                    Image(systemName: allCheckedIn ? "checkmark.circle.fill" : "circle")
+                        .font(.title3.weight(.semibold))
+                        .foregroundStyle(allCheckedIn ? .green : AdaptiveColor.graphite(colorScheme))
+                        .padding(10)
+                        .background(AdaptiveColor.cardBackground(colorScheme), in: Circle())
+                        .shadow(color: AdaptiveColor.cardShadow(colorScheme).opacity(0.08), radius: 8, x: 0, y: 4)
+                }
+                .buttonStyle(.plain)
+                .disabled(todayHabits.isEmpty)
             }
             LazyVGrid(columns: columns, spacing: 8) {
                 ForEach(days) { day in
@@ -39,65 +72,27 @@ struct StreakMatrixView: View {
                         )
                 }
             }
-            Divider()
-            MoodStripView(progress: days.moodScore)
         }
         .padding(28)
         .background(
             RoundedRectangle(cornerRadius: 36, style: .continuous)
-                .fill(Color.white)
-                .shadow(color: .black.opacity(0.1), radius: 20, x: 0, y: 16)
+                .fill(AdaptiveColor.cardBackground(colorScheme))
+                .shadow(color: AdaptiveColor.cardShadow(colorScheme).opacity(0.1), radius: 20, x: 0, y: 16)
         )
-    }
-}
-
-private struct MoodStripView: View {
-    let progress: Double
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text("Mood score")
-                    .font(.headline)
-                    .foregroundStyle(Color.graphite)
-                Spacer()
-                Text(progress.formatted(.percent.precision(.fractionLength(0))))
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Color.graphite)
-            }
-            GeometryReader { proxy in
-                ZStack(alignment: .leading) {
-                    Capsule()
-                        .fill(Color.graphite.opacity(0.08))
-                    Capsule()
-                        .fill(Color.graphite)
-                        .frame(width: proxy.size.width * progress)
-                }
-            }
-            .frame(height: 10)
-        }
     }
 }
 
 private extension HabitDay {
     var tint: Color {
         switch level {
-        case 3: return Color.graphite
-        case 2: return Color.graphite.opacity(0.7)
-        case 1: return Color.graphite.opacity(0.3)
-        default: return Color.graphite.opacity(0.1)
+        case 3: return Color.graphiteDark
+        case 2: return Color.graphiteDark.opacity(0.7)
+        case 1: return Color.graphiteDark.opacity(0.3)
+        default: return Color.graphiteDark.opacity(0.1)
         }
     }
 
     var labelColor: Color {
-        highlight ? .white : Color.graphite.opacity(0.6)
-    }
-}
-
-private extension Array where Element == HabitDay {
-    var moodScore: Double {
-        guard !isEmpty else { return 0 }
-        let total = reduce(0) { $0 + Double($1.level) }
-        return min(max(total / (Double(count) * 3), 0), 1)
+        highlight ? .white : Color.graphiteDark.opacity(0.6)
     }
 }
