@@ -9,7 +9,7 @@ struct Habit: Identifiable, Codable, Hashable {
     let id: UUID
     var title: String
     var cadence: Set<Weekday>
-    let startDate: Date
+    var startDate: Date
     var checkIns: Set<String>
     var trackingType: HabitTrackingType
     var minutesLog: [String: Int]
@@ -85,6 +85,36 @@ struct Habit: Identifiable, Codable, Hashable {
             minutesLog[dateString] = current + 5
         }
     }
+
+    mutating func reset() {
+        checkIns.removeAll()
+        minutesLog.removeAll()
+        startDate = Date()
+    }
+
+    func historyEntries() -> [HabitEntry] {
+        var entries: [HabitEntry] = []
+        var date = Date().startOfDay
+        let start = startDate.startOfDay
+        
+        // Safety cap to prevent infinite loops if startDate is corrupted or way in past
+        let maxDays = 365 * 5 
+        var daysChecked = 0
+        
+        while date >= start && daysChecked < maxDays {
+            if isActiveDay(date) {
+                let value = completionValue(on: date)
+                let formatter = DateFormatter()
+                formatter.dateFormat = "MMM d"
+                let label = formatter.string(from: date)
+                entries.append(HabitEntry(label: label, value: value, date: date))
+            }
+            date = date.addingDays(-1)
+            daysChecked += 1
+        }
+        
+        return entries.reversed()
+    }
 }
 
 extension Date {
@@ -108,4 +138,3 @@ extension Date {
         Calendar.current.startOfDay(for: self)
     }
 }
-

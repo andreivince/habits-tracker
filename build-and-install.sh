@@ -8,12 +8,12 @@ set -e
 echo "🔨 Building Habits Tracker (Release)..."
 
 # Close any running instances
-killall "Habits Tracker" 2>/dev/null || true
+killall "Habitual" 2>/dev/null || true
 
 swift build -c release
 
 echo "📦 Creating app bundle..."
-APP_NAME="Habits Tracker"
+APP_NAME="Habitual"
 BUNDLE_DIR=".build/release/$APP_NAME.app"
 CONTENTS_DIR="$BUNDLE_DIR/Contents"
 MACOS_DIR="$CONTENTS_DIR/MacOS"
@@ -25,6 +25,12 @@ mkdir -p "$RESOURCES_DIR"
 
 # Copy executable
 cp .build/release/HabitsTracker "$MACOS_DIR/$APP_NAME"
+
+# Copy app icon if it exists
+if [ -f "Sources/HabitsTrackerApp/Resources/AppIcon.icns" ]; then
+    cp Sources/HabitsTrackerApp/Resources/AppIcon.icns "$RESOURCES_DIR/"
+    echo "✅ App icon included"
+fi
 
 # Create Info.plist
 cat > "$CONTENTS_DIR/Info.plist" << EOF
@@ -44,6 +50,8 @@ cat > "$CONTENTS_DIR/Info.plist" << EOF
     <string>1.0</string>
     <key>CFBundleVersion</key>
     <string>1</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
     <key>LSMinimumSystemVersion</key>
     <string>13.0</string>
     <key>NSHighResolutionCapable</key>
@@ -67,7 +75,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     rm -rf "/Applications/$APP_NAME.app"
     cp -R "$BUNDLE_DIR" "/Applications/"
     echo "✅ Installed to /Applications/$APP_NAME.app"
-    echo "🚀 You can now find 'Habits Tracker' in your Applications folder!"
+    echo "🚀 You can now find 'Habitual' in your Applications folder!"
 else
     echo "ℹ️  You can manually copy $BUNDLE_DIR to /Applications"
 fi

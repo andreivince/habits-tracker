@@ -10,6 +10,8 @@ struct SettingsSheet: View {
 
     @State private var editedName: String
     @State private var showExportSuccess = false
+    @State private var showResetConfirmation = false
+    @State private var showResetSuccess = false
     @FocusState private var isNameFocused: Bool
 
     init(userName: Binding<String>, useSerifFont: Binding<Bool>) {
@@ -27,6 +29,7 @@ struct SettingsSheet: View {
                     nameSection
                     fontSection
                     exportSection
+                    resetHistorySection
                 }
                 .padding(28)
             }
@@ -34,7 +37,7 @@ struct SettingsSheet: View {
             footer
         }
         .background(AdaptiveColor.cardBackground(colorScheme))
-        .frame(width: 480, height: 540)
+        .frame(width: 480, height: 620)
         .onAppear {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 isNameFocused = true
@@ -171,6 +174,84 @@ struct SettingsSheet: View {
                     }
                     .transition(.opacity.combined(with: .scale(scale: 0.9)))
                 }
+            }
+        }
+    }
+
+    private var resetHistorySection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(spacing: 8) {
+                Image(systemName: "clock.arrow.circlepath")
+                    .font(.subheadline)
+                    .foregroundStyle(.red)
+                Text("Reset History")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(AdaptiveColor.graphite(colorScheme))
+            }
+
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Clear all tracking history while keeping your habits. This action cannot be undone.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Button {
+                    showResetConfirmation = true
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "trash")
+                            .font(.subheadline)
+                        Text("Reset All History")
+                            .font(.body.weight(.medium))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(Color.red.opacity(0.1))
+                    )
+                    .foregroundStyle(.red)
+                }
+                .buttonStyle(.plain)
+                .disabled(habitStore.habits.isEmpty)
+                .opacity(habitStore.habits.isEmpty ? 0.4 : 1.0)
+
+                if showResetSuccess {
+                    HStack(spacing: 6) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                        Text("History reset successfully!")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .transition(.opacity.combined(with: .scale(scale: 0.9)))
+                }
+            }
+        }
+        .confirmationDialog(
+            "Reset All History?",
+            isPresented: $showResetConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Reset History", role: .destructive) {
+                resetHistory()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This will clear all tracking data for all habits. Your habits will remain, but all check-ins and minutes logged will be deleted. This action cannot be undone.")
+        }
+    }
+
+    private func resetHistory() {
+        habitStore.resetHistory()
+
+        withAnimation {
+            showResetSuccess = true
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+            withAnimation {
+                showResetSuccess = false
             }
         }
     }

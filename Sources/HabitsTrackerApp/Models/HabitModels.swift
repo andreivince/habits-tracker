@@ -66,6 +66,13 @@ struct HabitEntry: Identifiable, Hashable {
     let id = UUID()
     let label: String
     let value: Double
+    let date: Date?
+    
+    init(label: String, value: Double, date: Date? = nil) {
+        self.label = label
+        self.value = value
+        self.date = date
+    }
 }
 
 extension HabitEntry {

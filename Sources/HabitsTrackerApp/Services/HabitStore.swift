@@ -86,4 +86,14 @@ final class HabitStore: ObservableObject {
             updateCurrentDay()
         }
     }
+
+    func resetHistory() {
+        let today = Date()
+        for index in habits.indices {
+            habits[index].checkIns.removeAll()
+            habits[index].minutesLog.removeAll()
+            habits[index].startDate = today
+        }
+        save()
+    }
 }

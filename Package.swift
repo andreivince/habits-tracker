@@ -16,7 +16,8 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "HabitsTrackerApp"
+            name: "HabitsTrackerApp",
+            resources: [.process("Resources")]
         )
     ]
 )

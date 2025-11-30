@@ -26,11 +26,18 @@ struct HabitSnapshotBuilder {
         case .yearly: return buildYearlyEntries(from: habits)
         }
 
-        return (0..<daysCount).map { offset in
+        // Find the earliest habit start date
+        let earliestStart = habits.map { $0.startDate.startOfDay }.min() ?? today
+
+        return (0..<daysCount).compactMap { offset in
             let date = today.addingDays(-daysCount + offset + 1)
+            
+            // Skip dates before any habit existed
+            guard date >= earliestStart else { return nil }
+            
             let value = calculateDayValue(for: date, habits: habits)
             let label = formatLabel(for: date, scope: scope)
-            return HabitEntry(label: label, value: value)
+            return HabitEntry(label: label, value: value, date: date)
         }
     }
 
@@ -38,8 +45,11 @@ struct HabitSnapshotBuilder {
         let calendar = Calendar.current
         let today = Date()
         let currentYear = calendar.component(.year, from: today)
+        
+        // Find the earliest habit start date
+        let earliestStart = habits.map { $0.startDate.startOfDay }.min() ?? today
 
-        return (1...12).map { month in
+        return (1...12).compactMap { month in
             var components = DateComponents()
             components.year = currentYear
             components.month = month
@@ -47,11 +57,16 @@ struct HabitSnapshotBuilder {
 
             guard let monthStart = calendar.date(from: components),
                   let monthEnd = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: monthStart) else {
-                return HabitEntry(label: monthLabel(month), value: 0)
+                return nil
+            }
+            
+            // Skip months entirely before any habit existed
+            if monthEnd < earliestStart {
+                return nil
             }
 
             let value = calculateMonthValue(start: monthStart, end: monthEnd, habits: habits)
-            return HabitEntry(label: monthLabel(month), value: value)
+            return HabitEntry(label: monthLabel(month), value: value, date: monthStart)
         }
     }
 
@@ -88,17 +103,26 @@ struct HabitSnapshotBuilder {
         var bestStreak = 0
         var tempStreak = 0
 
+        // Find earliest habit start date
+        let earliestStart = habits.map { $0.startDate.startOfDay }.min() ?? today
+
         for dayOffset in (0..<365).reversed() {
             let date = today.addingDays(-dayOffset)
-            var dayComplete = false
-
-            for habit in habits where date >= habit.startDate.startOfDay {
-                guard habit.isActiveDay(date) else { continue }
-                if habit.completionValue(on: date) >= 1.0 {
-                    dayComplete = true
-                    break
-                }
+            
+            // Skip dates before any habit existed
+            guard date >= earliestStart else { continue }
+            
+            // Check if there are any active habits for this day
+            let hasActiveHabits = habits.contains { habit in
+                date >= habit.startDate.startOfDay && habit.isActiveDay(date)
             }
+            
+            // Skip days with no active habits
+            guard hasActiveHabits else { continue }
+            
+            // Day is complete only if ALL active habits are 100% complete
+            let dayValue = calculateDayValue(for: date, habits: habits)
+            let dayComplete = dayValue >= 1.0
 
             if dayComplete {
                 tempStreak += 1
